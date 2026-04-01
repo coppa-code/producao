@@ -143,8 +143,7 @@
                     <th>Pts</th>
                 </tr>
             </thead>
-            <tbody id="tabela-detalhes-supervisor">
-                </tbody>
+            <tbody id="tabela-detalhes-supervisor"></tbody>
         </table>
     </div>
 
@@ -176,7 +175,6 @@
         document.getElementById('filtro-mes').value = dataLocal.substring(0, 7);
         document.getElementById('data-ocorrencia').value = dataLocal.substring(0, 16);
 
-        // Autenticação
         document.getElementById('btn-login').addEventListener('click', async () => {
             document.getElementById('msg-erro').innerText = "Autenticando...";
             try {
@@ -204,7 +202,7 @@
                         carregarMeusLancamentos();
                     } else {
                         document.getElementById('tela-supervisor').classList.remove('hidden');
-                        carregarDadosSupervisor(); // Carrega Ranking E Detalhes
+                        carregarDadosSupervisor();
                     }
                 }
             } else {
@@ -218,7 +216,6 @@
             }
         });
 
-        // Lógica de Salvar Lançamento
         document.getElementById('btn-lancar').addEventListener('click', async () => {
             const id = document.getElementById('edit-id').value;
             const tipo = document.getElementById('tipo-ocorrencia').value;
@@ -267,7 +264,6 @@
 
         document.getElementById('btn-cancelar-edit').addEventListener('click', limparFormulario);
 
-        // Funções da Tabela do Coordenador
         async function carregarMeusLancamentos() {
             const q = query(collection(db, "lancamentos"));
             const snap = await getDocs(q);
@@ -291,10 +287,9 @@
                 const podeEditar = diff <= limite48h;
                 const dataFormatada = new Date(item.data_fato).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit' });
                 
-                // Os botões agora usam data-id para evitar erros de leitura do navegador
                 const botoes = podeEditar ? 
-                    `<button class="btn-editar" data-id="${item.id}">Editar</button>
-                     <button class="btn-excluir" data-id="${item.id}">Excluir</button>` 
+                    `<button type="button" class="btn-editar" onclick="editarLancamento('${item.id}')">Editar</button>
+                     <button type="button" class="btn-excluir" onclick="excluirLancamento('${item.id}')">Excluir</button>` 
                     : '<span>Bloqueado (48h)</span>';
 
                 tbody.innerHTML += `
@@ -309,42 +304,38 @@
             });
         }
 
-        // NOVO: Método robusto para detectar cliques nos botões Editar e Excluir
-        document.getElementById('tabela-meus-lancamentos').addEventListener('click', async (e) => {
-            if (e.target.classList.contains('btn-excluir')) {
-                const id = e.target.getAttribute('data-id');
-                if(confirm("Deseja realmente excluir este registro de produtividade?")) {
-                    try {
-                        await deleteDoc(doc(db, "lancamentos", id));
-                        carregarMeusLancamentos();
-                    } catch (erro) {
-                        alert("Erro ao excluir: " + erro.message);
-                    }
-                }
-            } else if (e.target.classList.contains('btn-editar')) {
-                const id = e.target.getAttribute('data-id');
+        // Função de Exclusão atualizada para recarregar a página
+        window.excluirLancamento = async function(id) {
+            if(confirm("Deseja realmente excluir este registro de produtividade?")) {
                 try {
-                    const d = await getDoc(doc(db, "lancamentos", id));
-                    if (d.exists()) {
-                        const data = d.data();
-                        document.getElementById('edit-id').value = id;
-                        document.getElementById('tipo-ocorrencia').value = data.tipo_ocorrencia;
-                        document.getElementById('quantidade').value = data.quantidade;
-                        document.getElementById('data-ocorrencia').value = data.data_fato;
-                        document.getElementById('btn-lancar').innerText = "Atualizar Lançamento";
-                        document.getElementById('btn-cancelar-edit').classList.remove('hidden');
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }
+                    await deleteDoc(doc(db, "lancamentos", id));
+                    window.location.reload(); // <--- Comando adicionado aqui
                 } catch (erro) {
-                    alert("Erro ao carregar dados para edição.");
+                    alert("Erro ao excluir. O Firebase bloqueou a ação: " + erro.message);
                 }
             }
-        });
+        };
 
+        window.editarLancamento = async function(id) {
+            try {
+                const d = await getDoc(doc(db, "lancamentos", id));
+                if (d.exists()) {
+                    const data = d.data();
+                    document.getElementById('edit-id').value = id;
+                    document.getElementById('tipo-ocorrencia').value = data.tipo_ocorrencia;
+                    document.getElementById('quantidade').value = data.quantidade;
+                    document.getElementById('data-ocorrencia').value = data.data_fato;
+                    document.getElementById('btn-lancar').innerText = "Atualizar Lançamento";
+                    document.getElementById('btn-cancelar-edit').classList.remove('hidden');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            } catch (erro) {
+                alert("Erro ao puxar dados: " + erro.message);
+            }
+        };
 
-        // Funções do Supervisor (Ranking + Detalhes)
         async function carregarDadosSupervisor() {
-            const mesRef = document.getElementById('filtro-mes').value; // Ex: 2026-04
+            const mesRef = document.getElementById('filtro-mes').value;
             const pelotaoFiltro = document.getElementById('filtro-pelotao-supervisor').value;
             
             const snap = await getDocs(query(collection(db, "lancamentos")));
@@ -355,17 +346,14 @@
             snap.forEach(d => {
                 const data = d.data();
                 if(data.data_fato && data.data_fato.startsWith(mesRef)) {
-                    // Soma para o Ranking Geral
                     scores[data.pelotao] += data.pontos_totais;
                     
-                    // Separa para a tabela de detalhes
                     if(pelotaoFiltro === "todos" || data.pelotao === pelotaoFiltro) {
                         listaDetalhes.push(data);
                     }
                 }
             });
 
-            // 1. Renderiza o Ranking
             const rank = Object.keys(scores).map(p => ({ p, pts: scores[p] })).sort((a,b) => b.pts - a.pts);
             const tbodyRanking = document.getElementById('tabela-ranking');
             tbodyRanking.innerHTML = "";
@@ -378,8 +366,7 @@
                     </tr>`;
             });
 
-            // 2. Renderiza a Tabela de Detalhes
-            listaDetalhes.sort((a, b) => new Date(b.data_fato) - new Date(a.data_fato)); // Mais recentes primeiro
+            listaDetalhes.sort((a, b) => new Date(b.data_fato) - new Date(a.data_fato));
             const tbodyDetalhes = document.getElementById('tabela-detalhes-supervisor');
             tbodyDetalhes.innerHTML = "";
             
@@ -401,7 +388,6 @@
             }
         }
 
-        // Gatilhos de atualização do Supervisor
         document.getElementById('filtro-mes').addEventListener('change', carregarDadosSupervisor);
         document.getElementById('filtro-pelotao-supervisor').addEventListener('change', carregarDadosSupervisor);
         

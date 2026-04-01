@@ -3,59 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ranking Operacional - COPPA</title>
+    <title>Comando Operacional - COPPA</title>
     <style>
         :root {
             --verde-militar: #2C4C3B;
             --verde-claro: #4A7055;
-            --fundo: #F4F6F4;
+            --verde-destaque: #1a3024;
+            --fundo: #eef2ef;
             --texto: #333;
             --alerta: #dc2626;
             --info: #2563eb;
+            --ouro: #d97706;
         }
-        body { font-family: Arial, sans-serif; background-color: var(--fundo); color: var(--texto); margin: 0; display: flex; flex-direction: column; align-items: center; padding-bottom: 50px; }
-        header { background-color: var(--verde-militar); color: white; width: 100%; padding: 15px 0; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .container { width: 90%; max-width: 900px; margin-top: 20px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .hidden { display: none; }
-        input, select, button { width: 100%; padding: 10px; margin: 8px 0; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; }
-        button { background-color: var(--verde-claro); color: white; border: none; cursor: pointer; font-weight: bold; }
-        button:hover { background-color: var(--verde-militar); }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--fundo); color: var(--texto); margin: 0; display: flex; flex-direction: column; align-items: center; padding-bottom: 50px; }
+        header { background-color: var(--verde-militar); color: white; width: 100%; padding: 15px 0; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border-bottom: 3px solid var(--ouro); }
+        h2 { margin: 0; font-size: 1.5em; letter-spacing: 1px; text-transform: uppercase; }
+        
+        .container { width: 95%; max-width: 1100px; margin-top: 25px; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .hidden { display: none !important; }
+        
+        input, select, button { width: 100%; padding: 10px; margin: 8px 0; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; font-family: inherit; }
+        button { background-color: var(--verde-claro); color: white; border: none; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.2s; }
+        button:hover { background-color: var(--verde-destaque); }
+        
         .btn-excluir { background-color: var(--alerta); padding: 5px 10px; width: auto; font-size: 0.8em; margin: 2px; }
         .btn-editar { background-color: var(--info); padding: 5px 10px; width: auto; font-size: 0.8em; margin: 2px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85em; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        th { background-color: var(--verde-militar); color: white; }
-        .form-group { display: flex; gap: 10px; align-items: flex-end; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 0.9em; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        th, td { border: 1px solid #e5e7eb; padding: 10px; text-align: center; }
+        th { background-color: var(--verde-militar); color: white; text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.5px; }
+        tr:nth-child(even) { background-color: #f9fafb; }
+        tr:hover { background-color: #f3f4f6; }
+        
+        .form-group { display: flex; gap: 15px; align-items: flex-end; }
         .form-group div { flex: 1; }
-        @media (max-width: 600px) {
+
+        /* Estilos do Dashboard do Supervisor */
+        .dashboard-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ddd; padding-bottom: 15px; margin-bottom: 20px; }
+        .dashboard-header h3 { margin: 0; color: var(--verde-destaque); font-size: 1.4em; }
+        
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .card { background: #fff; border-left: 5px solid var(--verde-militar); padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee; }
+        .card h4 { margin: 0 0 10px 0; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 1px; }
+        .card p { margin: 0; font-size: 1.8em; font-weight: bold; color: var(--verde-destaque); }
+        .card .destaque-ouro { color: var(--ouro); }
+
+        .painel-duplo { display: flex; gap: 25px; flex-wrap: wrap; align-items: flex-start; }
+        .painel-coluna { flex: 1; min-width: 320px; background: white; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .painel-titulo { background: var(--verde-militar); color: white; padding: 12px 15px; margin: 0; font-size: 1em; display: flex; justify-content: space-between; align-items: center; }
+        .painel-conteudo { padding: 0; }
+        .painel-conteudo table { margin: 0; box-shadow: none; border: none; }
+        .painel-conteudo th { background-color: #f3f4f6; color: var(--texto); border-top: none; }
+
+        @media (max-width: 768px) {
             .form-group { flex-direction: column; align-items: stretch; gap: 0; }
+            .dashboard-header { flex-direction: column; align-items: flex-start; gap: 10px; }
         }
     </style>
 </head>
 <body>
 
     <header>
-        <h2 id="titulo-header">Painel de Produtividade</h2>
-        <button id="btn-sair" class="hidden" style="width: auto; padding: 5px 15px; float: right; margin-right: 20px;">Sair</button>
+        <h2 id="titulo-header">Comando Operacional</h2>
+        <button id="btn-sair" class="hidden" style="width: auto; padding: 5px 15px; float: right; margin-right: 20px; background: #dc2626;">Sair</button>
     </header>
 
-    <div id="tela-login" class="container">
-        <h3>Acesso ao Sistema</h3>
-        <input type="email" id="email" placeholder="E-mail">
+    <div id="tela-login" class="container" style="max-width: 400px; text-align: center;">
+        <img src="https://cdn-icons-png.flaticon.com/512/2635/2635417.png" alt="Escudo" style="width: 80px; margin-bottom: 15px; opacity: 0.8;">
+        <h3 style="color: var(--verde-militar); margin-top: 0;">Acesso ao Sistema</h3>
+        <input type="email" id="email" placeholder="E-mail Institucional">
         <input type="password" id="senha" placeholder="Senha">
-        <button id="btn-login">Entrar</button>
-        <p id="msg-erro" style="color: red;"></p>
+        <button id="btn-login" style="margin-top: 15px;">Entrar</button>
+        <p id="msg-erro" style="color: red; font-size: 0.9em;"></p>
     </div>
 
     <div id="tela-coordenador" class="container hidden">
-        <h3>Registrar Ocorrência - <span id="span-pelotao"></span></h3>
+        <h3 style="color: var(--verde-destaque); border-bottom: 2px solid #ddd; padding-bottom: 10px;">Lançamento de Ocorrência - <span id="span-pelotao" style="color: var(--verde-claro);"></span></h3>
         
         <div id="form-lancamento">
             <input type="hidden" id="edit-id">
             
             <div class="form-group">
-                <div>
-                    <label>Tipo de Ocorrência:</label>
+                <div style="flex: 2;">
+                    <label style="font-size: 0.9em; font-weight: bold; color: #555;">Natureza da Ocorrência:</label>
                     <select id="tipo-ocorrencia">
                         <option value="Arma de fogo">Apreensão de arma de fogo (5 pts)</option>
                         <option value="Prisão em flagrante">Prisão em flagrante (4 pts)</option>
@@ -64,87 +94,111 @@
                         <option value="Resgate ou Captura">Resgate ou Captura (1 pt)</option>
                     </select>
                 </div>
-                <div style="flex: 0.3;">
-                    <label>Qtd:</label>
+                <div style="flex: 0.5;">
+                    <label style="font-size: 0.9em; font-weight: bold; color: #555;">Qtd:</label>
                     <input type="number" id="quantidade" min="1" value="1">
                 </div>
-                <div>
-                    <label>Data e Hora da Ocorrência:</label>
+                <div style="flex: 1.5;">
+                    <label style="font-size: 0.9em; font-weight: bold; color: #555;">Data e Hora do Fato:</label>
                     <input type="datetime-local" id="data-ocorrencia">
                 </div>
             </div>
             
-            <button id="btn-lancar">Salvar Lançamento</button>
-            <button id="btn-cancelar-edit" class="hidden" style="background-color: #666;">Cancelar Edição</button>
-            <p id="msg-sucesso" style="text-align: center; font-weight: bold; color: green;"></p>
+            <button id="btn-lancar" style="margin-top: 15px;">Salvar Lançamento</button>
+            <button id="btn-cancelar-edit" class="hidden" style="background-color: #6b7280; margin-top: 5px;">Cancelar Edição</button>
+            <p id="msg-sucesso" style="text-align: center; font-weight: bold; color: var(--verde-claro);"></p>
         </div>
 
-        <hr style="margin: 30px 0; border: 0; border-top: 1px solid #ddd;">
-
-        <h4>Histórico de Lançamentos</h4>
+        <h4 style="margin-top: 40px; color: var(--verde-destaque);">Histórico Recente (Meu Pelotão)</h4>
         <table>
             <thead>
                 <tr>
                     <th>Data do Fato</th>
-                    <th>Ocorrência</th>
+                    <th>Natureza</th>
                     <th>Qtd</th>
                     <th>Pts</th>
-                    <th>Ações (Janela 48h)</th>
+                    <th>Ações (48h)</th>
                 </tr>
             </thead>
             <tbody id="tabela-meus-lancamentos"></tbody>
         </table>
     </div>
 
-    <div id="tela-supervisor" class="container hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h3>Ranking Mensal</h3>
-            <div>
-                <label style="font-size: 0.9em; font-weight: bold;">Mês:</label>
-                <input type="month" id="filtro-mes" style="width: auto; margin: 0;">
+    <div id="tela-supervisor" class="container hidden" style="max-width: 1200px; padding: 30px;">
+        
+        <div class="dashboard-header">
+            <h3>🦅 Visão Geral do Comando</h3>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label style="font-size: 0.9em; font-weight: bold; color: #555;">Ciclo de Avaliação:</label>
+                <input type="month" id="filtro-mes" style="width: auto; margin: 0; padding: 6px 10px; border-color: var(--verde-militar);">
             </div>
         </div>
-        <table id="tabela-ranking-geral">
-            <thead>
-                <tr>
-                    <th>Posição</th>
-                    <th>Pelotão</th>
-                    <th>Pontuação Total</th>
-                </tr>
-            </thead>
-            <tbody id="tabela-ranking"></tbody>
-        </table>
 
-        <hr style="margin: 40px 0 20px 0; border: 0; border-top: 2px solid var(--verde-militar);">
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
-            <h3 style="margin: 0;">Detalhamento de Lançamentos</h3>
-            <div style="margin-top: 10px;">
-                <label style="font-size: 0.9em; font-weight: bold;">Filtrar Pelotão:</label>
-                <select id="filtro-pelotao-supervisor" style="width: auto; margin: 0;">
-                    <option value="todos">Todos os Pelotões</option>
-                    <option value="1">Pelotão 1</option>
-                    <option value="2">Pelotão 2</option>
-                    <option value="3">Pelotão 3</option>
-                    <option value="4">Pelotão 4</option>
-                    <option value="5">Pelotão 5</option>
-                    <option value="6">Pelotão 6</option>
-                </select>
+        <div class="cards-grid">
+            <div class="card">
+                <h4>Pontuação da Companhia</h4>
+                <p id="card-pontos">0 <span style="font-size: 0.4em; color: #888; font-weight: normal;">pts totais</span></p>
+            </div>
+            <div class="card">
+                <h4>Pelotão Destaque</h4>
+                <p id="card-lider" class="destaque-ouro">-</p>
+            </div>
+            <div class="card">
+                <h4>Principal Ocorrência</h4>
+                <p id="card-ocorrencia" style="font-size: 1.3em;">-</p>
             </div>
         </div>
-        
-        <table>
-            <thead>
-                <tr>
-                    <th>Pelotão</th>
-                    <th>Data do Fato</th>
-                    <th>Ocorrência</th>
-                    <th>Qtd</th>
-                    <th>Pts</th>
-                </tr>
-            </thead>
-            <tbody id="tabela-detalhes-supervisor"></tbody>
-        </table>
+
+        <div class="painel-duplo">
+            
+            <div class="painel-coluna" style="flex: 1;">
+                <h4 class="painel-titulo">
+                    <span>🏆 Ranking Oficial</span>
+                </h4>
+                <div class="painel-conteudo">
+                    <table id="tabela-ranking-geral">
+                        <thead>
+                            <tr>
+                                <th>Posição</th>
+                                <th>Pelotão</th>
+                                <th>Pontuação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-ranking"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="painel-coluna" style="flex: 1.8;">
+                <h4 class="painel-titulo">
+                    <span>📋 Extrato Operacional</span>
+                    <select id="filtro-pelotao-supervisor" style="width: auto; margin: 0; padding: 4px; border-radius: 4px; font-size: 0.85em; background: white; color: var(--texto); border: none;">
+                        <option value="todos">Todos os Pelotões</option>
+                        <option value="1">Pelotão 1</option>
+                        <option value="2">Pelotão 2</option>
+                        <option value="3">Pelotão 3</option>
+                        <option value="4">Pelotão 4</option>
+                        <option value="5">Pelotão 5</option>
+                        <option value="6">Pelotão 6</option>
+                    </select>
+                </h4>
+                <div class="painel-conteudo" style="max-height: 400px; overflow-y: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Pelotão</th>
+                                <th>Data do Fato</th>
+                                <th>Natureza</th>
+                                <th>Qtd</th>
+                                <th>Pts</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-detalhes-supervisor"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
     </div>
 
     <script type="module">
@@ -176,12 +230,12 @@
         document.getElementById('data-ocorrencia').value = dataLocal.substring(0, 16);
 
         document.getElementById('btn-login').addEventListener('click', async () => {
-            document.getElementById('msg-erro').innerText = "Autenticando...";
+            document.getElementById('msg-erro').innerText = "Verificando credenciais...";
             try {
                 await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('senha').value);
                 document.getElementById('msg-erro').innerText = "";
             } catch (error) { 
-                document.getElementById('msg-erro').innerText = "E-mail ou senha incorretos."; 
+                document.getElementById('msg-erro').innerText = "Acesso Negado. E-mail ou senha incorretos."; 
             }
         });
 
@@ -198,7 +252,7 @@
                     dadosUsuarioAtual = docSnap.data();
                     if (dadosUsuarioAtual.cargo === "coordenador") {
                         document.getElementById('tela-coordenador').classList.remove('hidden');
-                        document.getElementById('span-pelotao').innerText = "Pelotão " + dadosUsuarioAtual.pelotao;
+                        document.getElementById('span-pelotao').innerText = dadosUsuarioAtual.pelotao;
                         carregarMeusLancamentos();
                     } else {
                         document.getElementById('tela-supervisor').classList.remove('hidden');
@@ -290,29 +344,26 @@
                 const botoes = podeEditar ? 
                     `<button type="button" class="btn-editar" onclick="editarLancamento('${item.id}')">Editar</button>
                      <button type="button" class="btn-excluir" onclick="excluirLancamento('${item.id}')">Excluir</button>` 
-                    : '<span>Bloqueado (48h)</span>';
+                    : '<span style="color: #9ca3af; font-size: 0.9em;">Bloqueado (48h)</span>';
 
                 tbody.innerHTML += `
                     <tr>
                         <td>${dataFormatada}</td>
                         <td>${item.tipo_ocorrencia}</td>
                         <td>${item.quantidade}</td>
-                        <td>${item.pontos_totais}</td>
+                        <td><strong style="color: var(--verde-militar);">${item.pontos_totais}</strong></td>
                         <td>${botoes}</td>
                     </tr>
                 `;
             });
         }
 
-        // Função de Exclusão atualizada para recarregar a página
         window.excluirLancamento = async function(id) {
             if(confirm("Deseja realmente excluir este registro de produtividade?")) {
                 try {
                     await deleteDoc(doc(db, "lancamentos", id));
-                    window.location.reload(); // <--- Comando adicionado aqui
-                } catch (erro) {
-                    alert("Erro ao excluir. O Firebase bloqueou a ação: " + erro.message);
-                }
+                    window.location.reload(); 
+                } catch (erro) { alert("Erro ao excluir: " + erro.message); }
             }
         };
 
@@ -329,9 +380,7 @@
                     document.getElementById('btn-cancelar-edit').classList.remove('hidden');
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
-            } catch (erro) {
-                alert("Erro ao puxar dados: " + erro.message);
-            }
+            } catch (erro) { alert("Erro ao puxar dados: " + erro.message); }
         };
 
         async function carregarDadosSupervisor() {
@@ -342,11 +391,20 @@
             
             let scores = { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0 };
             let listaDetalhes = [];
+            
+            // Variáveis para os Cards de Resumo
+            let totalPontosGeral = 0;
+            let ocorrenciasCount = {};
 
             snap.forEach(d => {
                 const data = d.data();
                 if(data.data_fato && data.data_fato.startsWith(mesRef)) {
+                    
                     scores[data.pelotao] += data.pontos_totais;
+                    totalPontosGeral += data.pontos_totais;
+                    
+                    // Contabiliza tipos de ocorrência para descobrir a mais frequente
+                    ocorrenciasCount[data.tipo_ocorrencia] = (ocorrenciasCount[data.tipo_ocorrencia] || 0) + data.quantidade;
                     
                     if(pelotaoFiltro === "todos" || data.pelotao === pelotaoFiltro) {
                         listaDetalhes.push(data);
@@ -354,34 +412,65 @@
                 }
             });
 
+            // Lógica do Card: Pelotão Líder
             const rank = Object.keys(scores).map(p => ({ p, pts: scores[p] })).sort((a,b) => b.pts - a.pts);
+            const temPontos = rank[0].pts > 0;
+            document.getElementById('card-lider').innerText = temPontos ? "Pelotão " + rank[0].p : "Nenhum dado";
+            
+            // Lógica do Card: Total de Pontos
+            document.getElementById('card-pontos').innerHTML = `${totalPontosGeral} <span style="font-size: 0.4em; color: #888; font-weight: normal;">pts totais</span>`;
+
+            // Lógica do Card: Ocorrência Frequente
+            let topOcorrencia = "-";
+            let maxCount = 0;
+            for (const [tipo, qtd] of Object.entries(ocorrenciasCount)) {
+                if(qtd > maxCount) {
+                    maxCount = qtd;
+                    topOcorrencia = tipo;
+                }
+            }
+            // Encurta nomes muito longos no card
+            if(topOcorrencia === "Apreensão de arma de fogo") topOcorrencia = "Arma de Fogo";
+            if(topOcorrencia === "Prisão em flagrante") topOcorrencia = "Prisão em Flagr.";
+            document.getElementById('card-ocorrencia').innerText = topOcorrencia;
+
+
+            // Renderiza Ranking
             const tbodyRanking = document.getElementById('tabela-ranking');
             tbodyRanking.innerHTML = "";
-            rank.forEach((item, i) => {
-                tbodyRanking.innerHTML += `
-                    <tr>
-                        <td>${i + 1}º</td>
-                        <td>Pelotão ${item.p}</td>
-                        <td style="font-size: 1.1em; color: var(--verde-militar);"><strong>${item.pts} pts</strong></td>
-                    </tr>`;
-            });
+            if(!temPontos) {
+                tbodyRanking.innerHTML = `<tr><td colspan="3" style="color: #888;">Nenhum ponto registrado no mês.</td></tr>`;
+            } else {
+                rank.forEach((item, i) => {
+                    let iconePosicao = i === 0 ? "🥇 " : i === 1 ? "🥈 " : i === 2 ? "🥉 " : i + 1 + "º";
+                    let rowStyle = i === 0 ? "background-color: #fdf6e3; font-weight: bold;" : "";
+                    
+                    tbodyRanking.innerHTML += `
+                        <tr style="${rowStyle}">
+                            <td style="font-size: 1.2em;">${iconePosicao}</td>
+                            <td>Pelotão ${item.p}</td>
+                            <td style="color: var(--verde-destaque); font-size: 1.1em;">${item.pts} pts</td>
+                        </tr>`;
+                });
+            }
 
+            // Renderiza Extrato
             listaDetalhes.sort((a, b) => new Date(b.data_fato) - new Date(a.data_fato));
             const tbodyDetalhes = document.getElementById('tabela-detalhes-supervisor');
             tbodyDetalhes.innerHTML = "";
             
             if(listaDetalhes.length === 0) {
-                tbodyDetalhes.innerHTML = `<tr><td colspan="5">Nenhum lançamento encontrado para este filtro.</td></tr>`;
+                tbodyDetalhes.innerHTML = `<tr><td colspan="5" style="color: #888; padding: 20px;">Nenhum lançamento encontrado para este filtro.</td></tr>`;
             } else {
                 listaDetalhes.forEach(item => {
-                    const dataF = new Date(item.data_fato).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit' });
+                    const dataF = new Date(item.data_fato).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute:'2-digit' });
                     tbodyDetalhes.innerHTML += `
                         <tr>
                             <td><strong>${item.pelotao}</strong></td>
-                            <td>${dataF}</td>
+                            <td style="font-size: 0.9em; color: #555;">${dataF}</td>
                             <td>${item.tipo_ocorrencia}</td>
                             <td>${item.quantidade}</td>
-                            <td>${item.pontos_totais}</td>
+                            <td><strong style="color: var(--verde-militar);">${item.pontos_totais}</strong></td>
                         </tr>
                     `;
                 });

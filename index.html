@@ -13,7 +13,7 @@
             --alerta: #dc2626;
             --info: #2563eb;
         }
-        body { font-family: Arial, sans-serif; background-color: var(--fundo); color: var(--texto); margin: 0; display: flex; flex-direction: column; align-items: center; }
+        body { font-family: Arial, sans-serif; background-color: var(--fundo); color: var(--texto); margin: 0; display: flex; flex-direction: column; align-items: center; padding-bottom: 50px; }
         header { background-color: var(--verde-militar); color: white; width: 100%; padding: 15px 0; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .container { width: 90%; max-width: 900px; margin-top: 20px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .hidden { display: none; }
@@ -27,6 +27,9 @@
         th { background-color: var(--verde-militar); color: white; }
         .form-group { display: flex; gap: 10px; align-items: flex-end; }
         .form-group div { flex: 1; }
+        @media (max-width: 600px) {
+            .form-group { flex-direction: column; align-items: stretch; gap: 0; }
+        }
     </style>
 </head>
 <body>
@@ -54,11 +57,11 @@
                 <div>
                     <label>Tipo de Ocorrência:</label>
                     <select id="tipo-ocorrencia">
-                        <option value="Arma de fogo">Apreensão de arma de fogo</option>
-                        <option value="Prisão em flagrante">Prisão em flagrante</option>
-                        <option value="TCO Lavrado">TCO Lavrado</option>
-                        <option value="Apreensão de animais">Apreensão de animais</option>
-                        <option value="Resgate ou Captura">Resgate ou Captura</option>
+                        <option value="Arma de fogo">Apreensão de arma de fogo (5 pts)</option>
+                        <option value="Prisão em flagrante">Prisão em flagrante (4 pts)</option>
+                        <option value="TCO Lavrado">TCO Lavrado (3 pts)</option>
+                        <option value="Apreensão de animais">Apreensão de animais (2 pts)</option>
+                        <option value="Resgate ou Captura">Resgate ou Captura (1 pt)</option>
                     </select>
                 </div>
                 <div style="flex: 0.3;">
@@ -96,7 +99,10 @@
     <div id="tela-supervisor" class="container hidden">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h3>Ranking Mensal</h3>
-            <input type="month" id="filtro-mes" style="width: auto;">
+            <div>
+                <label style="font-size: 0.9em; font-weight: bold;">Mês:</label>
+                <input type="month" id="filtro-mes" style="width: auto; margin: 0;">
+            </div>
         </div>
         <table id="tabela-ranking-geral">
             <thead>
@@ -107,6 +113,38 @@
                 </tr>
             </thead>
             <tbody id="tabela-ranking"></tbody>
+        </table>
+
+        <hr style="margin: 40px 0 20px 0; border: 0; border-top: 2px solid var(--verde-militar);">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <h3 style="margin: 0;">Detalhamento de Lançamentos</h3>
+            <div style="margin-top: 10px;">
+                <label style="font-size: 0.9em; font-weight: bold;">Filtrar Pelotão:</label>
+                <select id="filtro-pelotao-supervisor" style="width: auto; margin: 0;">
+                    <option value="todos">Todos os Pelotões</option>
+                    <option value="1">Pelotão 1</option>
+                    <option value="2">Pelotão 2</option>
+                    <option value="3">Pelotão 3</option>
+                    <option value="4">Pelotão 4</option>
+                    <option value="5">Pelotão 5</option>
+                    <option value="6">Pelotão 6</option>
+                </select>
+            </div>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Pelotão</th>
+                    <th>Data do Fato</th>
+                    <th>Ocorrência</th>
+                    <th>Qtd</th>
+                    <th>Pts</th>
+                </tr>
+            </thead>
+            <tbody id="tabela-detalhes-supervisor">
+                </tbody>
         </table>
     </div>
 
@@ -131,10 +169,7 @@
         const pesos = { "Arma de fogo": 5, "Prisão em flagrante": 4, "TCO Lavrado": 3, "Apreensão de animais": 2, "Resgate ou Captura": 1 };
         let dadosUsuarioAtual = null;
 
-        // Configuração Inicial de Datas para os inputs
         const hoje = new Date();
-        // Substring(0,16) pega o formato YYYY-MM-DDTHH:mm exigido pelo input datetime-local
-        // E usamos timezone local ajustado para não dar erro de fuso horário na tela
         const timezoneOffset = hoje.getTimezoneOffset() * 60000;
         const dataLocal = new Date(hoje.getTime() - timezoneOffset).toISOString();
         
@@ -152,11 +187,8 @@
             }
         });
 
-        document.getElementById('btn-sair').addEventListener('click', () => {
-            signOut(auth);
-        });
+        document.getElementById('btn-sair').addEventListener('click', () => signOut(auth));
 
-        // Monitorar Estado (A CORREÇÃO DO LOOP ESTÁ AQUI)
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 document.getElementById('tela-login').classList.add('hidden');
@@ -172,11 +204,10 @@
                         carregarMeusLancamentos();
                     } else {
                         document.getElementById('tela-supervisor').classList.remove('hidden');
-                        carregarRanking();
+                        carregarDadosSupervisor(); // Carrega Ranking E Detalhes
                     }
                 }
             } else {
-                // Esconde as telas internas e mostra apenas o login
                 document.getElementById('tela-login').classList.remove('hidden');
                 document.getElementById('tela-coordenador').classList.add('hidden');
                 document.getElementById('tela-supervisor').classList.add('hidden');
@@ -187,31 +218,28 @@
             }
         });
 
-        // Lógica de Salvar / Editar
+        // Lógica de Salvar Lançamento
         document.getElementById('btn-lancar').addEventListener('click', async () => {
             const id = document.getElementById('edit-id').value;
             const tipo = document.getElementById('tipo-ocorrencia').value;
             const qtd = parseInt(document.getElementById('quantidade').value);
             const dataFato = document.getElementById('data-ocorrencia').value;
             
-            if(!dataFato) {
-                alert("Por favor, preencha a data e hora da ocorrência.");
-                return;
-            }
+            if(!dataFato) return alert("Preencha a data e hora.");
 
             const pontos = qtd * pesos[tipo];
             const dataSistema = new Date().toISOString();
             
             const payload = {
+                id_coordenador: auth.currentUser.uid,
                 pelotao: dadosUsuarioAtual.pelotao,
                 tipo_ocorrencia: tipo,
                 quantidade: qtd,
                 pontos_totais: pontos,
                 data_fato: dataFato, 
-                data_registro_sistema: id ? undefined : dataSistema // Só cria a data do sistema se for novo
+                data_registro_sistema: id ? undefined : dataSistema
             };
 
-            // Remove propriedades undefined do payload antes de atualizar
             if(id) delete payload.data_registro_sistema;
 
             try {
@@ -225,7 +253,7 @@
                 limparFormulario();
                 carregarMeusLancamentos();
                 setTimeout(() => document.getElementById('msg-sucesso').innerText = "", 3000);
-            } catch (e) { alert("Erro ao salvar dados. Verifique a conexão."); }
+            } catch (e) { alert("Erro ao salvar. Verifique sua conexão."); }
         });
 
         function limparFormulario() {
@@ -233,7 +261,6 @@
             document.getElementById('quantidade').value = 1;
             document.getElementById('btn-lancar').innerText = "Salvar Lançamento";
             document.getElementById('btn-cancelar-edit').classList.add('hidden');
-            
             const localDate = new Date(new Date().getTime() - timezoneOffset).toISOString().substring(0, 16);
             document.getElementById('data-ocorrencia').value = localDate;
         }
@@ -249,97 +276,135 @@
             
             const agora = new Date();
             const limite48h = 48 * 60 * 60 * 1000;
-
             let lista = [];
+            
             snap.forEach(d => { 
                 if(d.data().pelotao === dadosUsuarioAtual.pelotao) {
                     lista.push({id: d.id, ...d.data()}); 
                 }
             });
             
-            // Ordena da data do fato mais recente para a mais antiga
             lista.sort((a, b) => new Date(b.data_fato) - new Date(a.data_fato));
 
             lista.forEach(item => {
                 const diff = agora - new Date(item.data_registro_sistema);
                 const podeEditar = diff <= limite48h;
+                const dataFormatada = new Date(item.data_fato).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit' });
                 
-                // Formata a data para visualização amigável na tabela
-                const dataFormatada = new Date(item.data_fato).toLocaleString('pt-BR', { 
-                    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit' 
-                });
-                
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${dataFormatada}</td>
-                    <td>${item.tipo_ocorrencia}</td>
-                    <td>${item.quantidade}</td>
-                    <td>${item.pontos_totais}</td>
-                    <td>
-                        ${podeEditar ? 
-                            `<button class="btn-editar" onclick="prepararEdicao('${item.id}')">Editar</button>
-                             <button class="btn-excluir" onclick="confirmarExclusao('${item.id}')">Excluir</button>` 
-                            : '<span>Bloqueado (48h)</span>'}
-                    </td>
+                // Os botões agora usam data-id para evitar erros de leitura do navegador
+                const botoes = podeEditar ? 
+                    `<button class="btn-editar" data-id="${item.id}">Editar</button>
+                     <button class="btn-excluir" data-id="${item.id}">Excluir</button>` 
+                    : '<span>Bloqueado (48h)</span>';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${dataFormatada}</td>
+                        <td>${item.tipo_ocorrencia}</td>
+                        <td>${item.quantidade}</td>
+                        <td>${item.pontos_totais}</td>
+                        <td>${botoes}</td>
+                    </tr>
                 `;
-                tbody.appendChild(tr);
             });
         }
 
-        window.prepararEdicao = async (id) => {
-            const d = await getDoc(doc(db, "lancamentos", id));
-            if (d.exists()) {
-                const data = d.data();
-                document.getElementById('edit-id').value = id;
-                document.getElementById('tipo-ocorrencia').value = data.tipo_ocorrencia;
-                document.getElementById('quantidade').value = data.quantidade;
-                document.getElementById('data-ocorrencia').value = data.data_fato;
-                
-                document.getElementById('btn-lancar').innerText = "Atualizar Lançamento";
-                document.getElementById('btn-cancelar-edit').classList.remove('hidden');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+        // NOVO: Método robusto para detectar cliques nos botões Editar e Excluir
+        document.getElementById('tabela-meus-lancamentos').addEventListener('click', async (e) => {
+            if (e.target.classList.contains('btn-excluir')) {
+                const id = e.target.getAttribute('data-id');
+                if(confirm("Deseja realmente excluir este registro de produtividade?")) {
+                    try {
+                        await deleteDoc(doc(db, "lancamentos", id));
+                        carregarMeusLancamentos();
+                    } catch (erro) {
+                        alert("Erro ao excluir: " + erro.message);
+                    }
+                }
+            } else if (e.target.classList.contains('btn-editar')) {
+                const id = e.target.getAttribute('data-id');
+                try {
+                    const d = await getDoc(doc(db, "lancamentos", id));
+                    if (d.exists()) {
+                        const data = d.data();
+                        document.getElementById('edit-id').value = id;
+                        document.getElementById('tipo-ocorrencia').value = data.tipo_ocorrencia;
+                        document.getElementById('quantidade').value = data.quantidade;
+                        document.getElementById('data-ocorrencia').value = data.data_fato;
+                        document.getElementById('btn-lancar').innerText = "Atualizar Lançamento";
+                        document.getElementById('btn-cancelar-edit').classList.remove('hidden');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                } catch (erro) {
+                    alert("Erro ao carregar dados para edição.");
+                }
             }
-        };
+        });
 
-        window.confirmarExclusao = async (id) => {
-            if(confirm("Deseja realmente excluir este registro de produtividade?")) {
-                await deleteDoc(doc(db, "lancamentos", id));
-                carregarMeusLancamentos();
-            }
-        };
 
-        // Funções do Supervisor
-        async function carregarRanking() {
-            const mesRef = document.getElementById('filtro-mes').value; // Formato YYYY-MM
+        // Funções do Supervisor (Ranking + Detalhes)
+        async function carregarDadosSupervisor() {
+            const mesRef = document.getElementById('filtro-mes').value; // Ex: 2026-04
+            const pelotaoFiltro = document.getElementById('filtro-pelotao-supervisor').value;
+            
             const snap = await getDocs(query(collection(db, "lancamentos")));
             
             let scores = { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0 };
+            let listaDetalhes = [];
 
             snap.forEach(d => {
                 const data = d.data();
-                // Verifica se a data_fato do lançamento começa com o mês selecionado
                 if(data.data_fato && data.data_fato.startsWith(mesRef)) {
+                    // Soma para o Ranking Geral
                     scores[data.pelotao] += data.pontos_totais;
+                    
+                    // Separa para a tabela de detalhes
+                    if(pelotaoFiltro === "todos" || data.pelotao === pelotaoFiltro) {
+                        listaDetalhes.push(data);
+                    }
                 }
             });
 
-            // Converte o objeto de scores em um array e ordena do maior para o menor
+            // 1. Renderiza o Ranking
             const rank = Object.keys(scores).map(p => ({ p, pts: scores[p] })).sort((a,b) => b.pts - a.pts);
-            
-            const tbody = document.getElementById('tabela-ranking');
-            tbody.innerHTML = "";
+            const tbodyRanking = document.getElementById('tabela-ranking');
+            tbodyRanking.innerHTML = "";
             rank.forEach((item, i) => {
-                tbody.innerHTML += `
+                tbodyRanking.innerHTML += `
                     <tr>
                         <td>${i + 1}º</td>
                         <td>Pelotão ${item.p}</td>
                         <td style="font-size: 1.1em; color: var(--verde-militar);"><strong>${item.pts} pts</strong></td>
                     </tr>`;
             });
+
+            // 2. Renderiza a Tabela de Detalhes
+            listaDetalhes.sort((a, b) => new Date(b.data_fato) - new Date(a.data_fato)); // Mais recentes primeiro
+            const tbodyDetalhes = document.getElementById('tabela-detalhes-supervisor');
+            tbodyDetalhes.innerHTML = "";
+            
+            if(listaDetalhes.length === 0) {
+                tbodyDetalhes.innerHTML = `<tr><td colspan="5">Nenhum lançamento encontrado para este filtro.</td></tr>`;
+            } else {
+                listaDetalhes.forEach(item => {
+                    const dataF = new Date(item.data_fato).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit' });
+                    tbodyDetalhes.innerHTML += `
+                        <tr>
+                            <td><strong>${item.pelotao}</strong></td>
+                            <td>${dataF}</td>
+                            <td>${item.tipo_ocorrencia}</td>
+                            <td>${item.quantidade}</td>
+                            <td>${item.pontos_totais}</td>
+                        </tr>
+                    `;
+                });
+            }
         }
 
-        // Se o supervisor mudar o mês no filtro, atualiza o ranking automaticamente
-        document.getElementById('filtro-mes').addEventListener('change', carregarRanking);
+        // Gatilhos de atualização do Supervisor
+        document.getElementById('filtro-mes').addEventListener('change', carregarDadosSupervisor);
+        document.getElementById('filtro-pelotao-supervisor').addEventListener('change', carregarDadosSupervisor);
+        
     </script>
 </body>
 </html>

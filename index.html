@@ -19,7 +19,7 @@
         header { background-color: var(--verde-militar); color: white; width: 100%; padding: 15px 0; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border-bottom: 3px solid var(--ouro); }
         h2 { margin: 0; font-size: 1.5em; letter-spacing: 1px; text-transform: uppercase; }
         
-        .container { width: 95%; max-width: 1100px; margin-top: 25px; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .container { width: 95%; max-width: 1100px; margin-top: 25px; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); box-sizing: border-box; }
         .hidden { display: none !important; }
         
         input, select, button { width: 100%; padding: 10px; margin: 8px 0; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; font-family: inherit; }
@@ -29,7 +29,9 @@
         .btn-excluir { background-color: var(--alerta); padding: 5px 10px; width: auto; font-size: 0.8em; margin: 2px; }
         .btn-editar { background-color: var(--info); padding: 5px 10px; width: auto; font-size: 0.8em; margin: 2px; }
         
-        table { width: 100%; border-collapse: collapse; font-size: 0.9em; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        /* Ajuste para tabelas no celular */
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9em; box-shadow: 0 2px 5px rgba(0,0,0,0.05); min-width: 500px; }
         th, td { border: 1px solid #e5e7eb; padding: 10px; text-align: center; }
         th { background-color: var(--verde-militar); color: white; text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.5px; }
         tr:nth-child(even) { background-color: #f9fafb; }
@@ -50,14 +52,18 @@
 
         .painel-duplo { display: flex; gap: 25px; flex-wrap: wrap; align-items: flex-start; }
         .painel-coluna { flex: 1; min-width: 320px; background: white; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .painel-titulo { background: var(--verde-militar); color: white; padding: 12px 15px; margin: 0; font-size: 1em; display: flex; justify-content: space-between; align-items: center; }
+        .painel-titulo { background: var(--verde-militar); color: white; padding: 12px 15px; margin: 0; font-size: 1em; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .painel-conteudo { padding: 0; }
         .painel-conteudo table { margin: 0; box-shadow: none; border: none; }
         .painel-conteudo th { background-color: #f3f4f6; color: var(--texto); border-top: none; }
 
+        /* Media Queries para Celular */
         @media (max-width: 768px) {
+            .container { padding: 15px; width: 100%; margin-top: 15px; }
             .form-group { flex-direction: column; align-items: stretch; gap: 0; }
             .dashboard-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .cards-grid { grid-template-columns: 1fr; }
+            .painel-coluna { min-width: 100%; }
         }
     </style>
 </head>
@@ -110,18 +116,20 @@
         </div>
 
         <h4 style="margin-top: 40px; color: var(--verde-destaque);">Histórico Recente (Meu Pelotão)</h4>
-        <table>
-            <thead>
-                <tr>
-                    <th>Data do Fato</th>
-                    <th>Natureza</th>
-                    <th>Qtd</th>
-                    <th>Pts</th>
-                    <th>Ações (48h)</th>
-                </tr>
-            </thead>
-            <tbody id="tabela-meus-lancamentos"></tbody>
-        </table>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data do Fato</th>
+                        <th>Natureza</th>
+                        <th>Qtd</th>
+                        <th>Pts</th>
+                        <th>Ações (48h)</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-meus-lancamentos"></tbody>
+            </table>
+        </div>
     </div>
 
     <div id="tela-supervisor" class="container hidden" style="max-width: 1200px; padding: 30px;">
@@ -155,8 +163,8 @@
                 <h4 class="painel-titulo">
                     <span>🏆 Ranking Oficial</span>
                 </h4>
-                <div class="painel-conteudo">
-                    <table id="tabela-ranking-geral">
+                <div class="painel-conteudo table-responsive" style="margin-top: 0;">
+                    <table id="tabela-ranking-geral" style="min-width: 100%;">
                         <thead>
                             <tr>
                                 <th>Posição</th>
@@ -182,8 +190,8 @@
                         <option value="6">Pelotão 6</option>
                     </select>
                 </h4>
-                <div class="painel-conteudo" style="max-height: 400px; overflow-y: auto;">
-                    <table>
+                <div class="painel-conteudo table-responsive" style="max-height: 400px; overflow-y: auto; margin-top: 0;">
+                    <table style="min-width: 500px;">
                         <thead>
                             <tr>
                                 <th>Pelotão</th>
@@ -277,6 +285,12 @@
             const dataFato = document.getElementById('data-ocorrencia').value;
             
             if(!dataFato) return alert("Preencha a data e hora.");
+
+            // TRAVA CONTRA LANÇAMENTOS ZERADOS OU NEGATIVOS
+            if (isNaN(qtd) || qtd <= 0) {
+                alert("⚠️ Operação bloqueada: A quantidade informada deve ser no mínimo 1.");
+                return;
+            }
 
             const pontos = qtd * pesos[tipo];
             const dataSistema = new Date().toISOString();

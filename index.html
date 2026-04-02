@@ -29,9 +29,7 @@
         .btn-excluir { background-color: var(--alerta); padding: 5px 10px; width: auto; font-size: 0.8em; margin: 2px; }
         .btn-editar { background-color: var(--info); padding: 5px 10px; width: auto; font-size: 0.8em; margin: 2px; }
         
-        /* Ajuste para tabelas no celular */
-        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 15px; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.9em; box-shadow: 0 2px 5px rgba(0,0,0,0.05); min-width: 500px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9em; margin-top: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         th, td { border: 1px solid #e5e7eb; padding: 10px; text-align: center; }
         th { background-color: var(--verde-militar); color: white; text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.5px; }
         tr:nth-child(even) { background-color: #f9fafb; }
@@ -40,7 +38,6 @@
         .form-group { display: flex; gap: 15px; align-items: flex-end; }
         .form-group div { flex: 1; }
 
-        /* Estilos do Dashboard do Supervisor */
         .dashboard-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ddd; padding-bottom: 15px; margin-bottom: 20px; }
         .dashboard-header h3 { margin: 0; color: var(--verde-destaque); font-size: 1.4em; }
         
@@ -57,13 +54,36 @@
         .painel-conteudo table { margin: 0; box-shadow: none; border: none; }
         .painel-conteudo th { background-color: #f3f4f6; color: var(--texto); border-top: none; }
 
-        /* Media Queries para Celular */
+        /* MAGICA DA RESPONSIVIDADE (CELULARES) */
         @media (max-width: 768px) {
-            .container { padding: 15px; width: 100%; margin-top: 15px; }
+            .container { padding: 15px; width: 100%; margin-top: 10px; }
             .form-group { flex-direction: column; align-items: stretch; gap: 0; }
             .dashboard-header { flex-direction: column; align-items: flex-start; gap: 10px; }
             .cards-grid { grid-template-columns: 1fr; }
             .painel-coluna { min-width: 100%; }
+            .painel-titulo { flex-direction: column; align-items: stretch; }
+            .painel-titulo select { width: 100%; margin-top: 10px; }
+            
+            /* Transforma Tabelas em Cards */
+            table, thead, tbody, th, td, tr { display: block; }
+            thead tr { position: absolute; top: -9999px; left: -9999px; } /* Esconde o cabeçalho original */
+            tr { border: 1px solid #ccc; border-radius: 8px; margin-bottom: 15px; background-color: #fff; padding: 10px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            td { border: none; border-bottom: 1px solid #eee; position: relative; padding: 10px 15px 10px 45%; text-align: right; font-size: 0.95em; min-height: 25px; }
+            td:last-child { border-bottom: 0; }
+            
+            /* Cria o rótulo da coluna (esquerda) usando o data-label injetado no HTML */
+            td::before { 
+                content: attr(data-label); 
+                position: absolute; 
+                left: 15px; 
+                width: 40%; 
+                padding-right: 10px; 
+                text-align: left; 
+                font-weight: bold; 
+                color: var(--verde-militar); 
+                font-size: 0.85em; 
+                text-transform: uppercase; 
+            }
         }
     </style>
 </head>
@@ -116,20 +136,18 @@
         </div>
 
         <h4 style="margin-top: 40px; color: var(--verde-destaque);">Histórico Recente (Meu Pelotão)</h4>
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Data do Fato</th>
-                        <th>Natureza</th>
-                        <th>Qtd</th>
-                        <th>Pts</th>
-                        <th>Ações (48h)</th>
-                    </tr>
-                </thead>
-                <tbody id="tabela-meus-lancamentos"></tbody>
-            </table>
-        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data do Fato</th>
+                    <th>Natureza</th>
+                    <th>Qtd</th>
+                    <th>Pts</th>
+                    <th>Ações (48h)</th>
+                </tr>
+            </thead>
+            <tbody id="tabela-meus-lancamentos"></tbody>
+        </table>
     </div>
 
     <div id="tela-supervisor" class="container hidden" style="max-width: 1200px; padding: 30px;">
@@ -163,8 +181,8 @@
                 <h4 class="painel-titulo">
                     <span>🏆 Ranking Oficial</span>
                 </h4>
-                <div class="painel-conteudo table-responsive" style="margin-top: 0;">
-                    <table id="tabela-ranking-geral" style="min-width: 100%;">
+                <div class="painel-conteudo">
+                    <table id="tabela-ranking-geral">
                         <thead>
                             <tr>
                                 <th>Posição</th>
@@ -190,8 +208,8 @@
                         <option value="6">Pelotão 6</option>
                     </select>
                 </h4>
-                <div class="painel-conteudo table-responsive" style="max-height: 400px; overflow-y: auto; margin-top: 0;">
-                    <table style="min-width: 500px;">
+                <div class="painel-conteudo" style="max-height: 400px; overflow-y: auto;">
+                    <table>
                         <thead>
                             <tr>
                                 <th>Pelotão</th>
@@ -362,11 +380,11 @@
 
                 tbody.innerHTML += `
                     <tr>
-                        <td>${dataFormatada}</td>
-                        <td>${item.tipo_ocorrencia}</td>
-                        <td>${item.quantidade}</td>
-                        <td><strong style="color: var(--verde-militar);">${item.pontos_totais}</strong></td>
-                        <td>${botoes}</td>
+                        <td data-label="Data do Fato">${dataFormatada}</td>
+                        <td data-label="Natureza">${item.tipo_ocorrencia}</td>
+                        <td data-label="Qtd">${item.quantidade}</td>
+                        <td data-label="Pts"><strong style="color: var(--verde-militar);">${item.pontos_totais}</strong></td>
+                        <td data-label="Ações (48h)">${botoes}</td>
                     </tr>
                 `;
             });
@@ -405,8 +423,6 @@
             
             let scores = { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0 };
             let listaDetalhes = [];
-            
-            // Variáveis para os Cards de Resumo
             let totalPontosGeral = 0;
             let ocorrenciasCount = {};
 
@@ -416,8 +432,6 @@
                     
                     scores[data.pelotao] += data.pontos_totais;
                     totalPontosGeral += data.pontos_totais;
-                    
-                    // Contabiliza tipos de ocorrência para descobrir a mais frequente
                     ocorrenciasCount[data.tipo_ocorrencia] = (ocorrenciasCount[data.tipo_ocorrencia] || 0) + data.quantidade;
                     
                     if(pelotaoFiltro === "todos" || data.pelotao === pelotaoFiltro) {
@@ -430,30 +444,22 @@
             const rank = Object.keys(scores).map(p => ({ p, pts: scores[p] })).sort((a,b) => b.pts - a.pts);
             const temPontos = rank[0].pts > 0;
             document.getElementById('card-lider').innerText = temPontos ? "Pelotão " + rank[0].p : "Nenhum dado";
-            
-            // Lógica do Card: Total de Pontos
             document.getElementById('card-pontos').innerHTML = `${totalPontosGeral} <span style="font-size: 0.4em; color: #888; font-weight: normal;">pts totais</span>`;
 
-            // Lógica do Card: Ocorrência Frequente
             let topOcorrencia = "-";
             let maxCount = 0;
             for (const [tipo, qtd] of Object.entries(ocorrenciasCount)) {
-                if(qtd > maxCount) {
-                    maxCount = qtd;
-                    topOcorrencia = tipo;
-                }
+                if(qtd > maxCount) { maxCount = qtd; topOcorrencia = tipo; }
             }
-            // Encurta nomes muito longos no card
             if(topOcorrencia === "Apreensão de arma de fogo") topOcorrencia = "Arma de Fogo";
             if(topOcorrencia === "Prisão em flagrante") topOcorrencia = "Prisão em Flagr.";
             document.getElementById('card-ocorrencia').innerText = topOcorrencia;
-
 
             // Renderiza Ranking
             const tbodyRanking = document.getElementById('tabela-ranking');
             tbodyRanking.innerHTML = "";
             if(!temPontos) {
-                tbodyRanking.innerHTML = `<tr><td colspan="3" style="color: #888;">Nenhum ponto registrado no mês.</td></tr>`;
+                tbodyRanking.innerHTML = `<tr><td colspan="3" style="color: #888; padding: 20px;">Nenhum ponto registrado no mês.</td></tr>`;
             } else {
                 rank.forEach((item, i) => {
                     let iconePosicao = i === 0 ? "🥇 " : i === 1 ? "🥈 " : i === 2 ? "🥉 " : i + 1 + "º";
@@ -461,9 +467,9 @@
                     
                     tbodyRanking.innerHTML += `
                         <tr style="${rowStyle}">
-                            <td style="font-size: 1.2em;">${iconePosicao}</td>
-                            <td>Pelotão ${item.p}</td>
-                            <td style="color: var(--verde-destaque); font-size: 1.1em;">${item.pts} pts</td>
+                            <td data-label="Posição" style="font-size: 1.2em;">${iconePosicao}</td>
+                            <td data-label="Pelotão">Pelotão ${item.p}</td>
+                            <td data-label="Pontuação" style="color: var(--verde-destaque); font-size: 1.1em;">${item.pts} pts</td>
                         </tr>`;
                 });
             }
@@ -480,11 +486,11 @@
                     const dataF = new Date(item.data_fato).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute:'2-digit' });
                     tbodyDetalhes.innerHTML += `
                         <tr>
-                            <td><strong>${item.pelotao}</strong></td>
-                            <td style="font-size: 0.9em; color: #555;">${dataF}</td>
-                            <td>${item.tipo_ocorrencia}</td>
-                            <td>${item.quantidade}</td>
-                            <td><strong style="color: var(--verde-militar);">${item.pontos_totais}</strong></td>
+                            <td data-label="Pelotão"><strong>${item.pelotao}</strong></td>
+                            <td data-label="Data do Fato" style="font-size: 0.9em; color: #555;">${dataF}</td>
+                            <td data-label="Natureza">${item.tipo_ocorrencia}</td>
+                            <td data-label="Qtd">${item.quantidade}</td>
+                            <td data-label="Pts"><strong style="color: var(--verde-militar);">${item.pontos_totais}</strong></td>
                         </tr>
                     `;
                 });
